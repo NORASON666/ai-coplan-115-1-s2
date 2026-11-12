@@ -413,7 +413,9 @@ cols.innerHTML=[1,2,3,4,5].map(i=>`<div class="col" data-g="${i}"><h4 title="點
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},ss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 // 每筆回報都存在這台電腦（ntfy 只留 12 小時）
 const PRIOR=/*PRIOR*/[],QTXT=/*QTXT*/{};
-let items=ls(KEY,[]).filter(x=>!String(x.id).startsWith('prior')).concat(PRIOR),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文',6:'上週 案例①',7:'上週 案例②'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
+// 只留今天的回報：前一天的測試資料隔天自動消失（上週原文 PRIOR 另外帶入）
+const DAY0=new Date().setHours(0,0,0,0)/1000;
+let items=ls(KEY,[]).filter(x=>!String(x.id).startsWith('prior')&&x.time>=DAY0).concat(PRIOR),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文',6:'上週 案例①',7:'上週 案例②'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
 const seen=new Set(items.map(x=>x.id));
 function setFs(v){fs=Math.max(.6,Math.min(2.6,Math.round(v*10)/10));bm.style.setProperty('--bfs',fs);spot.style.setProperty('--bfs',fs);ss(KEY+'fs',fs);}setFs(fs);
 const qName=q=>names[q]?`主題 ${q}：${names[q]}`:`主題 ${q}`;
@@ -421,14 +423,15 @@ function drawTabs(){tabs.innerHTML=Array.from({length:NQ},(_,k)=>k+1).map(i=>{co
 tabs.onclick=e=>{const b=e.target.closest('button');if(b)setQ(+b.dataset.q);};
 function setQ(q){curQ=q;redraw();}
 // 每組每主題只算最新一版（手機端是「編輯」）
-const latest=q=>{const m={};items.filter(x=>x.q===q).forEach(x=>m[x.g]=x);return m;};
+// 每組每主題取最新一版；最新一版是「清除」（空字串）就當作沒有內容
+const latest=q=>{const m={};items.filter(x=>x.q===q).forEach(x=>m[x.g]=x);for(const g in m)if(!m[g].t)delete m[g];return m;};
 const edits=(q,g)=>items.filter(x=>x.q===q&&x.g===g).length;
 function put(x,fresh){const l=$('bl'+x.g);l.innerHTML='';const el=document.createElement('div');el.className='item'+(fresh?' new':'');el.textContent=x.t;el.dataset.id=x.id;l.appendChild(el);
   const n=edits(x.q,x.g);if(n>1){const s=document.createElement('div');s.className='edits';s.textContent='已修改 '+(n-1)+' 次';l.appendChild(s);}}
 function redraw(){for(let i=1;i<=5;i++)$('bl'+i).innerHTML='';Object.values(latest(curQ)).forEach(x=>put(x,false));drawTabs();}
 function add(ev,fresh){if(seen.has(ev.id))return;seen.add(ev.id);let d;try{d=JSON.parse(ev.message)}catch(e){return}
-  const x={id:ev.id,time:ev.time,q:+d.q||1,g:+d.g,t:String(d.t||'')};if(!(x.g>=1&&x.g<=5&&x.q>=1&&x.q<=NQ)||!x.t)return;
-  items.push(x);items.sort((a,b)=>a.time-b.time);ss(KEY,items);if(x.q===curQ)put(x,fresh);drawTabs();}
+  const x={id:ev.id,time:ev.time,q:+d.q||1,g:+d.g,t:String(d.t||'')};if(!(x.g>=1&&x.g<=5&&x.q>=1&&x.q<=NQ)||(!x.t&&!d.del)||ev.time<DAY0)return;
+  items.push(x);items.sort((a,b)=>a.time-b.time);ss(KEY,items);if(x.q===curQ){if(x.t)put(x,fresh);else redraw();}drawTabs();}
 let ready=false;const es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=all');
 es.onopen=()=>{st.textContent='🟢 已連線';setTimeout(()=>ready=true,1500)};
 es.onmessage=e=>{try{const ev=JSON.parse(e.data);if(ev.event==='message')add(ev,ready)}catch(x){}};

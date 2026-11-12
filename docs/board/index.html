@@ -24,7 +24,7 @@ details.ex{font-size:15px;color:#555;margin:4px 0 0}details.ex summary{color:var
 details.ex p{margin:4px 0 0;background:#fff;border:1px dashed #b8c8de;border-radius:8px;padding:6px 10px}
 .pre{font-size:15px;color:#667}
 #send{width:100%;margin-top:6px;padding:14px;font-weight:900;font-size:22px;border:0;border-radius:12px;background:var(--orange);color:#fff}
-#send:disabled{opacity:.5}#msg{margin-top:10px;min-height:1.5em;font-weight:700}
+#send:disabled{opacity:.5}#clear{width:100%;margin-top:10px;padding:10px;font-weight:700;font-size:16px;border:2px solid #c0392b;border-radius:12px;background:#fff;color:#c0392b}#msg{margin-top:10px;min-height:1.5em;font-weight:700}
 .ok{color:#178a3b}.err{color:#c0392b}small.note{color:#777}
 </style></head><body><main>
 <h1>📝 小組討論回報</h1>
@@ -35,6 +35,7 @@ details.ex p{margin:4px 0 0;background:#fff;border:1px dashed #b8c8de;border-rad
 <div class="step">3. 寫下討論結果 <small class="note">（再按儲存會<b>取代</b>之前的版本）</small></div>
 <div id="area"><small class="note">先選組別和主題</small></div>
 <button id="send">💾 儲存到簡報</button>
+<button id="clear">🗑 清除這組在這個主題的內容</button>
 <div id="msg"></div>
 <small class="note">請勿填寫學生姓名等個資。</small>
 </main><script>
@@ -90,11 +91,15 @@ async function load(){if(!qn||!grp)return;const want=qn+'-'+grp;
   build('');dirty=false;m.className='';m.textContent='讀取這組目前的內容…';
   try{const r=await fetch('https://ntfy.sh/'+TOPIC+'/json?poll=1&since=all');const lines=(await r.text()).trim().split('\n');let last=null;
     for(const l of lines){try{const ev=JSON.parse(l);const d=JSON.parse(ev.message);if(+d.q===qn&&+d.g===grp)last=d}catch(e){}}
-    if(qn+'-'+grp!==want)return;build(last?last.t:'');dirty=false;m.textContent=last?'已載入第'+grp+'組目前的版本，可直接修改後儲存':'這組在主題'+qn+'還沒有內容';}
+    if(last&&!last.t)last=null;if(qn+'-'+grp!==want)return;build(last?last.t:'');dirty=false;m.textContent=last?'已載入第'+grp+'組目前的版本，可直接修改後儲存':'這組在主題'+qn+'還沒有內容';}
   catch(e){m.className='err';m.textContent='讀取失敗（可直接輸入）';}}
 b.onclick=async()=>{if(!grp){m.className='err';m.textContent='請先選組別';return}if(!qn){m.className='err';m.textContent='請先選主題';return}
 const s=collect();if(!s){m.className='err';m.textContent=four()?'請先填「新增一個證據」':'請先輸入內容';return}
 b.disabled=true;m.className='';m.textContent='送出中…';
 try{const r=await fetch('https://ntfy.sh/'+TOPIC,{method:'POST',body:JSON.stringify({q:qn,g:grp,t:s})});if(!r.ok)throw r.status;
 dirty=false;m.className='ok';m.textContent='✅ 已儲存（主題'+qn+'・第'+grp+'組），簡報上已更新';}catch(e){m.className='err';m.textContent='送出失敗，請再試一次（'+e+'）'}b.disabled=false};
+$('clear').onclick=async()=>{if(!grp||!qn){m.className='err';m.textContent='請先選組別和主題';return}
+if(!confirm('確定清除第'+grp+'組在主題'+qn+'的內容？簡報上也會一起清掉。'))return;
+try{const r=await fetch('https://ntfy.sh/'+TOPIC,{method:'POST',body:JSON.stringify({q:qn,g:grp,t:'',del:1})});if(!r.ok)throw r.status;
+dirty=false;build('');m.className='ok';m.textContent='🗑 已清除（主題'+qn+'・第'+grp+'組）';}catch(e){m.className='err';m.textContent='清除失敗，請再試一次（'+e+'）'}};
 </script></body></html>

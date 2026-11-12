@@ -22,6 +22,7 @@ def write_md():
         latest[k] = (ev["time"], str(d.get("t", ""))); edits[k] = edits.get(k, 0) + 1
     out = [f"# 115-1 港湖區分區共備 場次二 小組討論紀錄（自動備份，更新於 {time.strftime('%F %T')}）\n",
            "> 每組每主題只列最新一版；完整修改歷程在同資料夾的 jsonl 原始檔。\n"]
+    latest = {k: v for k, v in latest.items() if v[1].strip()}   # 最新一版是「清除」就不列
     for q in sorted({k[0] for k in latest}):
         out.append(f"\n## 主題 {q}\n")
         for g in sorted(k[1] for k in latest if k[0] == q):

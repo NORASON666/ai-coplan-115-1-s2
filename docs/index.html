@@ -563,7 +563,9 @@ cols.innerHTML=[1,2,3,4,5].map(i=>`<div class="col" data-g="${i}"><h4 title="點
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},ss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 // 每筆回報都存在這台電腦（ntfy 只留 12 小時）
 const PRIOR=[{"id": "prior6-1", "time": 1762390000, "q": 6, "g": 1, "t": "問題一：全員共識要教；學習用合適且正確的關鍵字搜尋可以比較能找到完整且確實符合需求的資料。\n問題二：\n1.AI回答的內容是整理過的，但不代表完全是正確的或真正符合需求的\n2.學生學習搜尋是來練習一種技能，是基本功，也是在問AI下提示詞時也需要能力。若不會下關鍵字，AI下提示詞得能力恐怕不會太好，要麼會太長、太多雜訊，要麼就可能錯誤。"}, {"id": "prior6-2", "time": 1762390001, "q": 6, "g": 2, "t": "1.我們這組認為還要教關鍵字搜尋\n關鍵字比較能確認學生知不知道現在主題的重點是什麼，會畫重點\n2.因為學生就會沒有思考的過程，只是直接吸取資訊，需要培養解決問題的能力\n3.辯證資料的能力，要讀取和驗證"}, {"id": "prior6-3", "time": 1762390002, "q": 6, "g": 3, "t": "關鍵字詞或口語表達?\n1.打字選字會影響學生使用效率和表達\n2.多問並根據回答再引導修正\n3.學習說出讓人理解、完整且精準的問題\n4.關鍵詞、直述句，因應情境選擇\n5.循序漸進的過程，關鍵字的教學還是會帶入，將Key point提出後再慢慢建構完整句子"}, {"id": "prior7-1", "time": 1762390000, "q": 7, "g": 1, "t": "問題一＋問題二\n不會，先讓學生閱讀文章，會問這篇文章哪裡有錯或問全部資訊都正確嗎？接著讓學生逐漸去拆解、剖析或驗證文章中內容，去看哪一段是錯誤的；或分組去將文章中每個詞各列一組的主題去查證。（學生在查關鍵詞查到櫻花鉤吻鮭時會發現它其實在雪霸國家公園而非玉山）\n（需要養成對AI抱持懷疑態度，如果都要用AI就要讓AI彼此之間交叉驗證；在用AI時要請她標註來源）\n\n問題三：\n在為學生養成正確態度時，就更需要提供許多篇內容有錯的文章，這樣才能讓學生多練習去查證，去了解AI容易錯誤、順著你的話走，所以這些犯錯內容會是很好的練習教材。"}, {"id": "prior7-2", "time": 1762390001, "q": 7, "g": 2, "t": "1.不會，以分組方式讓學生進行查驗及討論；逐項列出有疑問想與大家探討的項目。\n2.第一步先建立質疑，第二步質疑後舉證，依據查詢判讀後之資訊，找到有力證據(來源)支持自己的觀點。\n3.可以，利用反面教材形式讓學生理解AI資訊來源自面八方，包含未經查證的資料，增強學生資訊判讀及思考能力。"}, {"id": "prior7-3", "time": 1762390002, "q": 7, "g": 3, "t": "一、國家公園介紹，放入有問題資訊，是否會直接攤牌?\n不會，分組教學，先閱讀後圈出關鍵字，將資訊分配給布圖組別去查證\n二、如何讓學生從「覺得合理」到「找到證據」?\n讓各組分配找出得關鍵字，再經由討論、AI問答、關鍵字搜尋去驗證是否正確\n三、是否能成為判讀的學習材料?\n可以，藉由解構文章內的關鍵字詞，帶入關鍵字、分析和驗證"}],QTXT={"1": "重新設計這堂課，哪一種能力要放在更重要的位置？這個能力，作業要怎麼看得到？", "2": "①學生要交哪幾個版本？再加寫一句什麼？ ②老師拿到 30 份海報，眼睛先看哪裡？", "3": "①老師要改哪一個條件？ ②怎麼一次看完全班？", "4": "①要多問學生哪一題？ ②老師批閱時，怎麼不讓工作量暴增？", "6": "上週｜①還會教關鍵字搜尋嗎？為什麼？ ②AI 可以直接回答，學生為什麼還要學搜尋？", "7": "上週｜①你會直接告訴學生哪裡錯嗎？ ②怎麼從「覺得合理」走到「找到證據」？ ③AI 犯錯能當判讀教材嗎？"};
-let items=ls(KEY,[]).filter(x=>!String(x.id).startsWith('prior')).concat(PRIOR),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文',6:'上週 案例①',7:'上週 案例②'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
+// 只留今天的回報：前一天的測試資料隔天自動消失（上週原文 PRIOR 另外帶入）
+const DAY0=new Date().setHours(0,0,0,0)/1000;
+let items=ls(KEY,[]).filter(x=>!String(x.id).startsWith('prior')&&x.time>=DAY0).concat(PRIOR),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文',6:'上週 案例①',7:'上週 案例②'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
 const seen=new Set(items.map(x=>x.id));
 function setFs(v){fs=Math.max(.6,Math.min(2.6,Math.round(v*10)/10));bm.style.setProperty('--bfs',fs);spot.style.setProperty('--bfs',fs);ss(KEY+'fs',fs);}setFs(fs);
 const qName=q=>names[q]?`主題 ${q}：${names[q]}`:`主題 ${q}`;
@@ -571,14 +573,15 @@ function drawTabs(){tabs.innerHTML=Array.from({length:NQ},(_,k)=>k+1).map(i=>{co
 tabs.onclick=e=>{const b=e.target.closest('button');if(b)setQ(+b.dataset.q);};
 function setQ(q){curQ=q;redraw();}
 // 每組每主題只算最新一版（手機端是「編輯」）
-const latest=q=>{const m={};items.filter(x=>x.q===q).forEach(x=>m[x.g]=x);return m;};
+// 每組每主題取最新一版；最新一版是「清除」（空字串）就當作沒有內容
+const latest=q=>{const m={};items.filter(x=>x.q===q).forEach(x=>m[x.g]=x);for(const g in m)if(!m[g].t)delete m[g];return m;};
 const edits=(q,g)=>items.filter(x=>x.q===q&&x.g===g).length;
 function put(x,fresh){const l=$('bl'+x.g);l.innerHTML='';const el=document.createElement('div');el.className='item'+(fresh?' new':'');el.textContent=x.t;el.dataset.id=x.id;l.appendChild(el);
   const n=edits(x.q,x.g);if(n>1){const s=document.createElement('div');s.className='edits';s.textContent='已修改 '+(n-1)+' 次';l.appendChild(s);}}
 function redraw(){for(let i=1;i<=5;i++)$('bl'+i).innerHTML='';Object.values(latest(curQ)).forEach(x=>put(x,false));drawTabs();}
 function add(ev,fresh){if(seen.has(ev.id))return;seen.add(ev.id);let d;try{d=JSON.parse(ev.message)}catch(e){return}
-  const x={id:ev.id,time:ev.time,q:+d.q||1,g:+d.g,t:String(d.t||'')};if(!(x.g>=1&&x.g<=5&&x.q>=1&&x.q<=NQ)||!x.t)return;
-  items.push(x);items.sort((a,b)=>a.time-b.time);ss(KEY,items);if(x.q===curQ)put(x,fresh);drawTabs();}
+  const x={id:ev.id,time:ev.time,q:+d.q||1,g:+d.g,t:String(d.t||'')};if(!(x.g>=1&&x.g<=5&&x.q>=1&&x.q<=NQ)||(!x.t&&!d.del)||ev.time<DAY0)return;
+  items.push(x);items.sort((a,b)=>a.time-b.time);ss(KEY,items);if(x.q===curQ){if(x.t)put(x,fresh);else redraw();}drawTabs();}
 let ready=false;const es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=all');
 es.onopen=()=>{st.textContent='🟢 已連線';setTimeout(()=>ready=true,1500)};
 es.onmessage=e=>{try{const ev=JSON.parse(e.data);if(ev.event==='message')add(ev,ready)}catch(x){}};
