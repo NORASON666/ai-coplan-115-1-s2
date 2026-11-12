@@ -390,7 +390,7 @@ const bm=$('boardModal'),cols=$('boardCols'),tabs=$('boardTabs'),st=$('boardStat
 cols.innerHTML=[1,2,3,4,5].map(i=>`<div class="col" data-g="${i}"><h4 title="點一下只看這組">第 ${i} 組</h4><div class="list" id="bl${i}"></div></div>`).join('');
 const ls=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},ss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 // 每筆回報都存在這台電腦（ntfy 只留 12 小時）
-let items=ls(KEY,[]),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文',5:'小組產出'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
+let items=ls(KEY,[]),names=ls(KEY+'names',{1:'案例①第3題',2:'案例④ 生圖海報',3:'案例⑤ Scratch',4:'案例⑥ 作文'}),fs=ls(KEY+'fs',1),curQ=1,spotList=[],spotI=0;
 const seen=new Set(items.map(x=>x.id));
 function setFs(v){fs=Math.max(.6,Math.min(2.6,Math.round(v*10)/10));bm.style.setProperty('--bfs',fs);spot.style.setProperty('--bfs',fs);ss(KEY+'fs',fs);}setFs(fs);
 const qName=q=>names[q]?`主題 ${q}：${names[q]}`:`主題 ${q}`;
