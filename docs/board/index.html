@@ -90,7 +90,8 @@ async function load(){if(!qn||!grp)return;const want=qn+'-'+grp;
   if(dirty&&!confirm('畫面上還沒儲存的內容會被換掉，確定？'))return;
   build('');dirty=false;m.className='';m.textContent='讀取這組目前的內容…';
   try{const r=await fetch('https://ntfy.sh/'+TOPIC+'/json?poll=1&since=all');const lines=(await r.text()).trim().split('\n');let last=null;
-    for(const l of lines){try{const ev=JSON.parse(l);const d=JSON.parse(ev.message);if(+d.q===qn&&+d.g===grp)last=d}catch(e){}}
+    const day0=new Date().setHours(0,0,0,0)/1000;
+    for(const l of lines){try{const ev=JSON.parse(l);if(ev.time<day0)continue;const d=JSON.parse(ev.message);if(+d.q===qn&&+d.g===grp)last=d}catch(e){}}
     if(last&&!last.t)last=null;if(qn+'-'+grp!==want)return;build(last?last.t:'');dirty=false;m.textContent=last?'已載入第'+grp+'組目前的版本，可直接修改後儲存':'這組在主題'+qn+'還沒有內容';}
   catch(e){m.className='err';m.textContent='讀取失敗（可直接輸入）';}}
 b.onclick=async()=>{if(!grp){m.className='err';m.textContent='請先選組別';return}if(!qn){m.className='err';m.textContent='請先選主題';return}
