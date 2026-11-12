@@ -2,6 +2,7 @@
 import html, json, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from content import S, SHOT, ILL
+import content as content_mod
 
 BASE = os.path.dirname(__file__)
 notes = {s["n"]: s["notes"] for s in json.load(open(os.path.join(BASE, "slides.json")))}
@@ -164,7 +165,8 @@ def sup_html(n):
     return "".join(out), len(items)
 
 
-slides, side = [], []
+slides, side, pops_html = [], [], []
+POOL = getattr(content_mod, "_L", {})
 canva, sub, cur = 0, 0, "0"
 dmain, dsub = 0, 0
 # pg= 的頁是 HTML 版搬過位置的頁，保留 Canva 原頁碼；依序編號時跳過這些頁碼
@@ -194,10 +196,27 @@ for d in S:
         body = body.replace(w, f'<a class="fwlink" data-fw="{i}">{w} 📐</a>')
     sh, cnt = sup_html(label)
     badge = f'<button class="supbtn" title="補充資料（S）">📎 補充（{cnt} 則）</button>' if cnt else ""
-    slides.append(f'<section class="slide t-{d["t"]}" id="p{disp}" data-label="{disp}" data-canva="{label}"><div class="inner">{body}</div>{badge}<div class="pno" title="Canva 第 {label} 頁">{disp}</div></section>')
+    # 討論頁標記：老師一眼知道這頁要討論、手機填哪個主題
+    if d.get("talk"):
+        badge += f'<div class="talkbadge">🗣 {e(d["talk"])}</div>'
+    # 彈出頁：點按鈕跳出場次一的原頁（含補充資料），不佔主線頁數
+    if d.get("pops"):
+        bs = ""
+        for btxt, labs in d["pops"]:
+            gid = f"g{len(pops_html)}"
+            bs += f'<button class="popbtn" data-pop="{gid}">🔍 {e(btxt)}</button>'
+            for i, lb in enumerate(labs):
+                pd = POOL[str(lb)]
+                psh, pcnt = sup_html(str(lb))
+                supb = f'<button class="popsupbtn">📎 補充（{pcnt} 則）</button><template class="psup">{psh}</template>' if pcnt else ""
+                pops_html.append(f'<section class="slide popslide t-{pd["t"]}" data-pop="{gid}" data-i="{i}" data-n="{len(labs)}"><div class="inner">{render(pd)}</div>'
+                                 f'<div class="popbar"><b>上週｜{e(btxt)}</b><span>{i + 1} / {len(labs)}　← → 換頁　Esc 關閉</span>{supb}<button class="popx">✕ 關閉</button></div></section>')
+        badge += f'<div class="pops">{bs}</div>'
+    battr = f' data-board="{d["board"]}"' if d.get("board") else ""
+    slides.append(f'<section class="slide t-{d["t"]}" id="p{disp}" data-label="{disp}" data-canva="{label}"{battr}><div class="inner">{body}</div>{badge}<div class="pno" title="Canva 第 {label} 頁">{disp}</div></section>')
     side.append({"n": disp, "canva": label, "notes": note, "sup": sh})
 
 tpl = open(os.path.join(BASE, "template.html")).read()
-out = tpl.replace("<!--SLIDES-->", "\n".join(slides)).replace("/*SIDE*/[]", json.dumps(side, ensure_ascii=False))
+out = tpl.replace("<!--SLIDES-->", "\n".join(slides + pops_html)).replace("/*PRIOR*/[]", json.dumps(getattr(content_mod, "PRIOR", []), ensure_ascii=False)).replace("/*QTXT*/{}", json.dumps(getattr(content_mod, "QTXT", {}), ensure_ascii=False)).replace("/*SIDE*/[]", json.dumps(side, ensure_ascii=False))
 open(os.path.join(BASE, "..", "docs", "index.html"), "w").write(out)
 print("slides", len(slides), "with supplements", sum(1 for s in side if s["sup"]))
