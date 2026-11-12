@@ -38,6 +38,10 @@ const QS={1:['案例① 第3題','重新設計搜尋課'],2:['案例④','生圖
 const CASE={2:'學生要完成「未來的智慧校園」海報，有人直接用 AI 生成整張，有人先畫草圖再請 AI 協助。',
   3:'角色碰到敵人後生命值要減 1，學生卡住就問 AI。全班 30 份作品最後都會動。',
   4:'語文老師：五年級學生作文寫不出來，想讓他們問 AI 幫忙，又怕直接複製。'};
+// 前兩格依案例預先填好（可改），各組只要想後兩格
+const PRE={2:['完成「未來的智慧校園」海報','直接生成整張海報（構圖、配色、圖像）'],
+  3:['完成一個 Scratch 遊戲（碰到敵人生命值減 1）','直接寫出完整程式、幫忙除錯'],
+  4:['寫一篇作文','給範文、例句，甚至整篇寫好']};
 const F=[['原本作業','學生原本要做什麼？'],['AI 可能代做','AI 可以直接完成哪一部分？'],['新增一個證據','只加一個：要學生留下什麼，才看得見學習？'],['快速判讀','老師用什麼方式，30 個學生也能快速看出來？']];
 const $=id=>document.getElementById(id),q=$('q'),g=$('g'),area=$('area'),b=$('send'),m=$('msg');
 try{grp=+localStorage.getItem('grp')||0}catch(e){}
@@ -49,13 +53,13 @@ function build(text){
   if(!four()){area.innerHTML='<textarea id="free" maxlength="600" placeholder="例如：我們這組認為…"></textarea>';$('free').value=text||'';}
   else{area.innerHTML='<div class="case">'+CASE[qn]+'</div>'+F.map((f,i)=>`<div class="f"><label>${f[0]}<span>${f[1]}</span></label><textarea id="f${i}" maxlength="200"></textarea></div>`).join('');
     // 讀回舊版：依「欄名：」切回四格；切不出來就整段放第一格
-    const parts=parse(text||'');F.forEach((f,i)=>$('f'+i).value=parts[i]||'');}
+    const parts=text?parse(text):[...PRE[qn],'',''];F.forEach((f,i)=>$('f'+i).value=parts[i]||'');}
   area.querySelectorAll('textarea').forEach(x=>x.oninput=()=>dirty=true);}
 function parse(s){const out=['','','',''];if(!s)return out;let hit=false;
   F.forEach((f,i)=>{const re=new RegExp('【'+f[0]+'】([\\s\\S]*?)(?=\\n?【|$)');const r=s.match(re);if(r){out[i]=r[1].trim().replace(/^（未填）$/,'');hit=true}});
   if(!hit)out[0]=s;return out;}
 function collect(){if(!four())return $('free').value.trim();
-  const v=F.map((f,i)=>$('f'+i).value.trim());if(!v.some(x=>x))return '';
+  const v=F.map((f,i)=>$('f'+i).value.trim());if(!v[2])return '';
   return F.map((f,i)=>'【'+f[0]+'】'+(v[i]||'（未填）')).join('\n');}
 // 選好主題＋組別 → 帶出這組目前的版本來編輯（同組誰最後儲存就以誰為準）
 let dirty=false;
@@ -67,7 +71,7 @@ async function load(){if(!qn||!grp)return;const want=qn+'-'+grp;
     if(qn+'-'+grp!==want)return;build(last?last.t:'');dirty=false;m.textContent=last?'已載入第'+grp+'組目前的版本，可直接修改後儲存':'這組在主題'+qn+'還沒有內容';}
   catch(e){m.className='err';m.textContent='讀取失敗（可直接輸入）';}}
 b.onclick=async()=>{if(!grp){m.className='err';m.textContent='請先選組別';return}if(!qn){m.className='err';m.textContent='請先選主題';return}
-const s=collect();if(!s){m.className='err';m.textContent='請先輸入內容';return}
+const s=collect();if(!s){m.className='err';m.textContent=four()?'請先填「新增一個證據」':'請先輸入內容';return}
 b.disabled=true;m.className='';m.textContent='送出中…';
 try{const r=await fetch('https://ntfy.sh/'+TOPIC,{method:'POST',body:JSON.stringify({q:qn,g:grp,t:s})});if(!r.ok)throw r.status;
 dirty=false;m.className='ok';m.textContent='✅ 已儲存（主題'+qn+'・第'+grp+'組），簡報上已更新';}catch(e){m.className='err';m.textContent='送出失敗，請再試一次（'+e+'）'}b.disabled=false};
