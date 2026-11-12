@@ -17,6 +17,12 @@ textarea{width:100%;font:inherit;padding:10px 12px;border:2px solid #b8c8de;bord
 .f label span{font-weight:500;font-size:15px;color:#667;margin-left:6px}
 .f textarea{min-height:64px}
 .case{background:#fff7e8;border-left:5px solid var(--orange);padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:16px}
+.how{background:#eaf2fc;border-left:5px solid var(--blue);padding:8px 12px;border-radius:8px;margin-bottom:14px;font-size:16px}
+.how b{color:var(--navy)}
+.f .ask{font-size:16px;color:#333;margin:2px 0 4px}
+details.ex{font-size:15px;color:#555;margin:4px 0 0}details.ex summary{color:var(--blue);font-weight:700;cursor:pointer}
+details.ex p{margin:4px 0 0;background:#fff;border:1px dashed #b8c8de;border-radius:8px;padding:6px 10px}
+.pre{font-size:15px;color:#667}
 #send{width:100%;margin-top:6px;padding:14px;font-weight:900;font-size:22px;border:0;border-radius:12px;background:var(--orange);color:#fff}
 #send:disabled{opacity:.5}#msg{margin-top:10px;min-height:1.5em;font-weight:700}
 .ok{color:#178a3b}.err{color:#c0392b}small.note{color:#777}
@@ -42,6 +48,19 @@ const CASE={2:'學生要完成「未來的智慧校園」海報，有人直接�
 const PRE={2:['完成「未來的智慧校園」海報','直接生成整張海報（構圖、配色、圖像）'],
   3:['完成一個 Scratch 遊戲（碰到敵人生命值減 1）','直接寫出完整程式、幫忙除錯'],
   4:['寫一篇作文','給範文、例句，甚至整篇寫好']};
+// 每個主題的引導：這題怎麼想、後兩格各問什麼、參考例子（收合，想不出來再點開）
+const GUIDE={
+ 1:{how:'<b>這題怎麼想：</b>先寫一個 AI 時代更需要的能力，再寫一個「看得到」這個能力的作業。',
+    ph:'① 更重要的能力：（例：判斷資料來源）\n② 看得到它的作業：（例：在 AI 回答裡標出你查證過的一句，寫下查了哪裡）'},
+ 2:{how:'<b>改造法②「保留前後差異」：</b>學生先自己做初稿 → 再請 AI 協助 → 自己選擇、修改成最終稿。前後版本都交，老師就看得到學生自己做了哪些決定。',
+    ask:['學生要交哪幾個版本？再加寫一句什麼？','老師拿到 30 份海報，眼睛先看哪裡？'],
+    ex:['先畫的草圖、AI 版、最終版三張並排，加一句「我最後改了＿＿，因為＿＿」。','①最終版的構圖是不是來自草圖（沒有整張被 AI 換掉）？②那句理由有沒有講到設計（例如標題太小所以放大），不是只寫「比較好看」？兩項都不行的，才請他當場說明。']},
+ 3:{how:'<b>改造法③「完成後改一題」：</b>作品完成後，老師改一個條件，請學生自己改程式。真的懂的人很快就改得出來。',
+    ask:['老師要改哪一個條件？','怎麼一次看完全班？'],
+    ex:['生命值 3 → 5，或碰到敵人扣 1 → 扣 2，請學生當場自己改。','全班同時改 1 分鐘，老師巡一圈看誰改得出來；改不出來的才個別問「你覺得要改哪裡？」。']},
+ 4:{how:'<b>改造法①「成品＋一個關鍵問題」：</b>作文照樣交，只多問一題 AI 沒辦法替學生回答的問題。',
+    ask:['要多問學生哪一題？','老師批閱時，怎麼不讓工作量暴增？'],
+    ex:['「AI 給的例句裡，你沒採用哪一句？為什麼？」','先只看這一題的回答；說不出理由的，才回頭細看他的作文。']}};
 const F=[['原本作業','學生原本要做什麼？'],['AI 可能代做','AI 可以直接完成哪一部分？'],['新增一個證據','只加一個：要學生留下什麼，才看得見學習？'],['快速判讀','老師用什麼方式，30 個學生也能快速看出來？']];
 const $=id=>document.getElementById(id),q=$('q'),g=$('g'),area=$('area'),b=$('send'),m=$('msg');
 try{grp=+localStorage.getItem('grp')||0}catch(e){}
@@ -50,8 +69,11 @@ for(const i of Object.keys(QS)){const x=document.createElement('button');x.datas
 function draw(){[...g.children].forEach((x,i)=>x.classList.toggle('on',i+1===grp));[...q.children].forEach(x=>x.classList.toggle('on',+x.dataset.q===qn))}draw();
 const four=()=>qn>=2&&qn<=4;
 function build(text){
-  if(!four()){area.innerHTML='<textarea id="free" maxlength="600" placeholder="例如：我們這組認為…"></textarea>';$('free').value=text||'';}
-  else{area.innerHTML='<div class="case">'+CASE[qn]+'</div>'+F.map((f,i)=>`<div class="f"><label>${f[0]}<span>${f[1]}</span></label><textarea id="f${i}" maxlength="200"></textarea></div>`).join('');
+  const G=GUIDE[qn]||{};
+  if(!four()){area.innerHTML=(G.how?'<div class="how">'+G.how+'</div>':'')+'<textarea id="free" maxlength="600"></textarea>';$('free').placeholder=G.ph||'例如：我們這組認為…';$('free').value=text||'';}
+  else{area.innerHTML='<div class="case"><b>情境：</b>'+CASE[qn]+'</div><div class="how">'+G.how+'</div>'+F.map((f,i)=>i<2
+      ?`<div class="f"><label>${f[0]}<span>已幫你填好，可改</span></label><textarea id="f${i}" class="pre" maxlength="200"></textarea></div>`
+      :`<div class="f"><label>${f[0]}</label><div class="ask">👉 ${G.ask[i-2]}</div><textarea id="f${i}" maxlength="200"></textarea><details class="ex"><summary>💡 想不出來？看一個例子</summary><p>${G.ex[i-2]}</p></details></div>`).join('');
     // 讀回舊版：依「欄名：」切回四格；切不出來就整段放第一格
     const parts=text?parse(text):[...PRE[qn],'',''];F.forEach((f,i)=>$('f'+i).value=parts[i]||'');}
   area.querySelectorAll('textarea').forEach(x=>x.oninput=()=>dirty=true);}
