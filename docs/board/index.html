@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>小組討論回報</title>
+<style>
+:root{--navy:#1f3a68;--blue:#2f7fd0;--orange:#f0a030}
+*{box-sizing:border-box}body{margin:0;background:#f4f8fc;font:18px/1.5 "Noto Sans TC",system-ui,sans-serif;color:#222}
+main{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{color:var(--navy);font-size:24px;margin:4px 0 16px}
+.g{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.g button{font-weight:900;font-size:20px;padding:14px 0;border:2px solid var(--navy);border-radius:12px;background:#fff;color:var(--navy)}
+.g button.on{background:var(--navy);color:#fff}
+textarea{width:100%;min-height:180px;font:inherit;padding:12px;border:2px solid #b8c8de;border-radius:12px}
+#send{width:100%;margin-top:12px;padding:14px;font-weight:900;font-size:22px;border:0;border-radius:12px;background:var(--orange);color:#fff}
+#send:disabled{opacity:.5}#msg{margin-top:10px;min-height:1.5em;font-weight:700}
+.ok{color:#178a3b}.err{color:#c0392b}small{color:#777}
+</style></head><body><main>
+<h1>📝 小組討論回報</h1>
+<div>1. 選討論主題（看簡報上寫第幾題）</div>
+<div class="g" id="q"></div>
+<div>2. 選你們的組別</div>
+<div class="g" id="g"></div>
+<div>3. 寫下討論結果（每組每個主題一份；再按儲存會<b>取代</b>之前的版本）</div>
+<textarea id="t" maxlength="600" placeholder="例如：我們這組認為…"></textarea>
+<button id="send">💾 儲存到簡報</button>
+<div id="msg"></div>
+<small>請勿填寫學生姓名等個資。</small>
+</main><script>
+const TOPIC='coplan1113-03609635c2';let grp=0,qn=0;
+const q=document.getElementById('q'),g=document.getElementById('g'),t=document.getElementById('t'),b=document.getElementById('send'),m=document.getElementById('msg');
+try{grp=+localStorage.getItem('grp')||0}catch(e){}
+for(let i=1;i<=5;i++){const x=document.createElement('button');x.textContent='第'+i+'組';x.onclick=()=>{grp=i;try{localStorage.setItem('grp',i)}catch(e){}draw();load()};g.appendChild(x)}
+for(let i=1;i<=10;i++){const x=document.createElement('button');x.textContent='主題'+i;x.style.fontSize='17px';x.onclick=()=>{qn=i;draw();load()};q.appendChild(x)}
+function draw(){[...g.children].forEach((x,i)=>x.classList.toggle('on',i+1===grp));[...q.children].forEach((x,i)=>x.classList.toggle('on',i+1===qn))}draw();
+// 選好主題＋組別 → 帶出這組目前的版本來編輯（同組誰最後儲存就以誰為準）
+let dirty=false;t.oninput=()=>dirty=true;
+async function load(){if(!qn||!grp)return;const want=qn+'-'+grp;
+  if(dirty&&t.value.trim()&&!confirm('畫面上還沒儲存的內容會被換掉，確定？'))return;
+  m.className='';m.textContent='讀取這組目前的內容…';
+  try{const r=await fetch('https://ntfy.sh/'+TOPIC+'/json?poll=1&since=all');const lines=(await r.text()).trim().split('\n');let last=null;
+    for(const l of lines){try{const ev=JSON.parse(l);const d=JSON.parse(ev.message);if(+d.q===qn&&+d.g===grp)last=d}catch(e){}}
+    if(qn+'-'+grp!==want)return;t.value=last?last.t:'';dirty=false;m.textContent=last?'已載入第'+grp+'組目前的版本，可直接修改後儲存':'這組在主題'+qn+'還沒有內容';}
+  catch(e){m.className='err';m.textContent='讀取失敗（可直接輸入）';}}
+b.onclick=async()=>{const s=t.value.trim();if(!qn){m.className='err';m.textContent='請先選主題';return}if(!grp){m.className='err';m.textContent='請先選組別';return}if(!s){m.className='err';m.textContent='請先輸入內容';return}
+b.disabled=true;m.className='';m.textContent='送出中…';
+try{const r=await fetch('https://ntfy.sh/'+TOPIC,{method:'POST',body:JSON.stringify({q:qn,g:grp,t:s})});if(!r.ok)throw r.status;
+dirty=false;m.className='ok';m.textContent='✅ 已儲存（主題'+qn+'・第'+grp+'組），簡報上已更新';}catch(e){m.className='err';m.textContent='送出失敗，請再試一次（'+e+'）'}b.disabled=false};
+</script></body></html>
