@@ -110,6 +110,13 @@ def render(d):
         return f'{head(d)}<div class="cards c4 arrows">{cs}</div>{foot(d)}'
     if t == "steps":
         cs = "".join(f'<li><span class="num">{i + 1}</span><span>{e(x)}</span></li>' for i, x in enumerate(d["steps"]))
+        if d.get("colormark"):
+            # 顏色標記法面板（教育部《國小生聰明用 AI》手冊 p.38 的寫詩例）
+            C = {"k": "#222", "r": "#c0392b", "b": "#1f5fbf"}
+            poem = "".join("<div>" + "".join(f'<span style="color:{C[c]}">{html.escape(w)}</span>' for c, w in line) + "</div>" for line in d["colormark"]["poem"])
+            leg = "".join(f'<li><i style="background:{C[c]}"></i>{e(x)}</li>' for c, x in d["colormark"]["legend"])
+            panel = f'<div class="cmark"><h3>{e(d["colormark"]["title"])}</h3><ul class="cleg">{leg}</ul><div class="cpoem">{poem}</div><p class="cnote">{e(d["colormark"]["note"])}</p></div>'
+            return f'{head(d)}<div class="cmwrap"><ol class="steps">{cs}</ol>{panel}</div>{foot(d)}'
         return f'{head(d)}<ol class="steps">{cs}</ol>{foot(d)}'
     if t == "case":
         mark = "ABC" if d.get("letters") else "123"
